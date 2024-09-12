@@ -28,7 +28,7 @@ echo
 
 user="$(whoami)"
 if [ $user = "root" ];then
-    echo "${bold}${red}Este script nÃ£o pode ser iniciado como Super UsuÃ¡rio!"
+    echo "${bold}${red}Este script não pode ser iniciado como Super Usuário!"
     echo "A instalaÃ§Ã£o nÃ£o poderÃ¡ continuar!"
     echo
     exit 0
