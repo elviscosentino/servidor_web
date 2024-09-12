@@ -34,7 +34,7 @@ if [ $user = "root" ];then
     exit 0
 fi
 
-echo "${bold}${yellow}Ã‰ importante que o servidor esteja com as Ãºltimas atualizaÃ§Ãµes!"
+echo "${bold}${yellow}É importante que o servidor esteja com as últimas atualizações!"
 echo "${bold}${yellow}Se ainda nÃ£o foi rodado o comando ${green}sudo apt update && sudo apt upgrade${yellow},"
 echo "${bold}${yellow}Ã© recomendÃ¡vel que faÃ§a isso antes de instalar."
 read -p "Continuar? (S/N) " continuar < /dev/tty
