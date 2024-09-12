@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# curl -s https://raw.githubusercontent.com/elviscosentino/servidor_web/main/instalador.sh | bash
+# curl -s https://palterm.com.br/aws-apache.txt | bash
 
 termcols=$(tput cols)
 bold="$(tput bold)"
@@ -29,14 +29,14 @@ echo
 user="$(whoami)"
 if [ $user = "root" ];then
     echo "${bold}${red}Este script não pode ser iniciado como Super Usuário!"
-    echo "A instalaÃ§Ã£o nÃ£o poderÃ¡ continuar!"
+    echo "A instalação não poderá continuar!"
     echo
     exit 0
 fi
 
 echo "${bold}${yellow}É importante que o servidor esteja com as últimas atualizações!"
-echo "${bold}${yellow}Se ainda nÃ£o foi rodado o comando ${green}sudo apt update && sudo apt upgrade${yellow},"
-echo "${bold}${yellow}Ã© recomendÃ¡vel que faÃ§a isso antes de instalar."
+echo "${bold}${yellow}Se ainda não foi rodado o comando ${green}sudo apt update && sudo apt upgrade${yellow},"
+echo "${bold}${yellow}é recomendável que faça isso antes de instalar."
 read -p "Continuar? (S/N) " continuar < /dev/tty
 if [ $continuar = "S" ] || [ $continuar = "s" ];then
     echo "${normal}"
@@ -46,8 +46,8 @@ else
 fi
 echo
 
-echo "${bold}${yellow}AtenÃ§Ã£o: o domÃ­nio ou subdomÃ­nio a ser instalado,"
-echo "deverÃ¡ jÃ¡ estar com o dns propagado para o ip pÃºblico deste servidor!"
+echo "${bold}${yellow}Atenção: o domínio ou subdomínio a ser instalado,"
+echo "deverá já estar com o dns propagado para o ip público deste servidor!"
 read -p "Continuar? (S/N) " continuar < /dev/tty
 if [ $continuar = "S" ] || [ $continuar = "s" ];then
     echo "${normal}"
@@ -56,21 +56,21 @@ else
     exit 0
 fi
 
-read -p "Digite o domÃ­nio que serÃ¡ criado (ou subdomÃ­nio): " dominio < /dev/tty
+read -p "Digite o domínio que será criado (ou subdomínio): " dominio < /dev/tty
 echo
 myip="$(dig +short myip.opendns.com @resolver1.opendns.com)"
 domainip="$(dig +short $dominio @resolver1.opendns.com)"
-echo "IP do domÃ­nio $dominio: $domainip"
-echo "IP pÃºblico deste servidor: $myip"
+echo "IP do domínio $dominio: $domainip"
+echo "IP público deste servidor: $myip"
 echo
 if [ $myip != $domainip ];then
-    echo "${bold}${red}O IP do domÃ­nio informado nÃ£o Ã© o mesmo deste servidor!"
-    echo "A instalaÃ§Ã£o nÃ£o poderÃ¡ continuar!"
+    echo "${bold}${red}O IP do domínio informado não é o mesmo deste servidor!"
+    echo "A instalação não poderá continuar!"
     echo
     exit 0
 fi
 
-read -p "Digite a pasta que serÃ¡ criada para a hospedagem (ficarÃ¡ em /var/www/): " pasta < /dev/tty
+read -p "Digite a pasta que será criada para a hospedagem (ficará em /var/www/): " pasta < /dev/tty
 echo
 
 read -p "Instalar o certificado SSL? (S/N) " instalarssl < /dev/tty
@@ -87,7 +87,7 @@ echo
 
 read -p "Instalar o PHPMyAdmin? (S/N) " instalarphpmyadmin < /dev/tty
 if [ $instalarphpmyadmin = "S" ] || [ $instalarphpmyadmin = "s" ];then
-    read -p "Digite o domÃ­nio que serÃ¡ criado para o PhpMyAdmin (ou subdomÃ­nio): " dominiophpmyadmin < /dev/tty
+    read -p "Digite o domínio que será criado para o PhpMyAdmin (ou subdomínio): " dominiophpmyadmin < /dev/tty
 fi
 echo
 
@@ -108,7 +108,7 @@ echo "Inicio: $dataini"
 
 
 # instala o servidor apache, php 8.3 e suas dependencias
-echo "${bold}${green}===== INSTALANDO O APACHE, PHP 8.3 E DEPENDÃŠNCIAS =====${normal}"
+echo "${bold}${green}===== INSTALANDO O APACHE, PHP 8.3 E DEPENDÊNCIAS =====${normal}"
 sudo ufw allow ssh && sudo ufw allow http && sudo ufw allow https && echo "y" | sudo ufw enable
 sudo add-apt-repository ppa:ondrej/php -y
 sudo apt update
@@ -125,10 +125,10 @@ if [ $instalarcomposer = "S" ] || [ $instalarcomposer = "s" ];then
     #sudo certbot certonly --apache --agree-tos -n -d $dominio -m $email
     sudo certbot certonly --manual --preferred-challenges=dns --agree-tos -d $dominio -d *.$dominio -m $email
 echo "
-# Comando para emissÃ£o de certificado
+# Comando para emissão de certificado
 sudo certbot certonly --manual --preferred-challenges=dns --non-interactive --agree-tos -d $dominio -d *.$dominio -m $email
 
-# Reinicie o Apache ou o serviÃ§o web correspondente
+# Reinicie o Apache ou o serviço web correspondente
 sudo systemctl restart apache2" | sudo tee ~/renovar_certificado.sh
     sudo chmod 777 ~/renovar_certificado.sh
     echo "0  0    1 * *   root    /home/ubuntu/renovar_certificado.sh" | sudo tee -a /etc/crontab
@@ -137,7 +137,7 @@ fi
 
 
 # configura pasta base e dados para conexao do site
-echo "${bold}${green}===== CONFIGURANDO A PASTA BASE E PARÃ‚METROS DO APACHE =====${normal}"
+echo "${bold}${green}===== CONFIGURANDO A PASTA BASE E PARÂMETROS DO APACHE =====${normal}"
 sudo mkdir /var/www/$pasta && sudo chown root:www-data /var/www/$pasta -R && sudo chmod 777 /var/www/$pasta -R
 echo "<VirtualHost *:80>
         ServerName $dominio
