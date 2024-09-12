@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# curl -s https://palterm.com.br/aws-apache.txt | bash
+# curl -s https://raw.githubusercontent.com/elviscosentino/servidor_web/main/instalador.sh | bash
 
 termcols=$(tput cols)
 bold="$(tput bold)"
