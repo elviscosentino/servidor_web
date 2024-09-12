@@ -100,6 +100,9 @@ echo
 read -p "Instalar servidor FTP? (S/N) " instalarftp < /dev/tty
 echo
 
+read -p "Instalar servidor VPN Wireguard? (S/N) " instalarwireguard < /dev/tty
+echo
+
 
 # alterar o timezone do servidor para o Brasil
 echo "${bold}${green}===== ALTERANDO O TIMEZONE DO SERVIDOR PARA O BRASIL =====${normal}"
@@ -336,6 +339,95 @@ pasv_max_port=10100" | sudo tee -a /etc/vsftpd.conf
 fi
 
 
+# instala o servidor VPN Wireguard
+if [ $instalarwireguard = "S" ] || [ $instalarwireguard = "s" ];then
+    echo "${bold}${green}===== INSTALANDO E CONFIGURANDO O VPN WIREGUARD =====${normal}"
+    sudo apt install net-tools -y
+    localip="$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')"
+    sudo apt install wireguard -y
+    # Gerar as chaves privada e publica
+    wg genkey | sudo tee /etc/wireguard/privatekey | wg pubkey | sudo tee /etc/wireguard/publickey
+    privkey="$(sudo cat /etc/wireguard/privatekey)"
+    publickey="$(sudo cat /etc/wireguard/publickey)"
+    interface="$(ip link | awk -F: '$0 !~ "lo|vir|wl|ip|vti|wg|^[^0-9]"{print $2;getline}')"
+    # Criar arquivo de configuracao:
+    # Definir os dados de host e os peers que forem se conectar:
+    echo "[Interface]
+# Essa linha abaixo, serve para rotear a internet do servidor, apenas p/ conhecimento. Manter comentada.
+# PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -t nat -A POSTROUTING -o $interface -j MASQUERADE
+# E nos clientes o AllowedIPs deve ficar 0.0.0.0/0
+
+# PublicKey = $publickey  <-- para informar aos clientes
+PrivateKey = $privkey
+ListenPort = 51820
+
+# MODELO PARA UTILIZAR NOS CLIENTES (copiar apenas do Address para baixo)
+#
+# [Interface]
+# PrivateKey = MANTER O QUE ESTIVER NO CLIENTE
+# Address = 172.16.1.0/24
+#
+# [Peer]
+# PublicKey = $publickey
+# AllowedIPs = $localip/32
+# Endpoint = $myip:51820
+
+# Peer: PC 1...
+#[Peer]
+#PublicKey = cPYnjxylAaVrIRvrgr/EcUR7mg3WdfzQU6sLTdd5TEo=  <-- publickey do cliente
+#AllowedIPs = 172.16.1.0/24   <-- IP definido para o cliente
+
+# Peer: PC 2...
+#[Peer]
+#PublicKey = cPYnjxylAaVrIRvrgr/EcUR7mg3WdfzQU6sLTdd5TEo=  <-- publickey do cliente
+#AllowedIPs = 172.16.2.0/24   <-- IP definido para o cliente" | sudo tee /etc/wireguard/wg0.conf
+    # Se certificar que o comando: net.ipv4.ip_forward=1 esta no /etc/sysctl.conf
+    ipforward=0
+    if grep -q "^net.ipv4.ip_forward=1$" "/etc/sysctl.conf"; then
+        ipforward=1
+    elif grep -q "^net.ipv4.ip_forward= 1$" "/etc/sysctl.conf"; then
+        ipforward=1
+    elif grep -q "^net.ipv4.ip_forward =1$" "/etc/sysctl.conf"; then
+        ipforward=1
+    elif grep -q "^net.ipv4.ip_forward = 1$" "/etc/sysctl.conf"; then
+        ipforward=1
+    fi
+    if [ "$ipforward" -eq 0 ]; then
+        echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
+        sudo sysctl -p
+    fi
+    # Liberar porta no firewall
+    sudo ufw allow 51820/udp
+    # Criar o servico para ativar na inicializacao:
+    echo "[Unit]
+Description=WireGuard via wg-quick on %i
+Documentation=man:wg-quick(8)
+Documentation=man:wg(8)
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/wg-quick up %i
+ExecStop=/usr/bin/wg-quick down %i
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target" | sudo tee /etc/systemd/system/wg-quick@wg0.service
+    sudo systemctl daemon-reload
+    sudo systemctl enable wg-quick@wg0.service
+    sudo service wg-quick@wg0 start
+
+    # Nos clientes a configuracao segue o modelo: 
+    # [Interface]
+    # PrivateKey = WGNM/yByOPK+Seyt8B4esW9mOZU6w2Ub6H9LmEFGylQ=
+    # Address = 172.16.X.0/24
+
+    # [Peer]
+    # PublicKey = LOeRrnlD6DOE4QcJxXgGgOcPqXhIfIIVT/515xYjvhI=   <-- publickey criada no server
+    # AllowedIPs = 172.31.13.0/24   <-- IP de Network do server (final sempre zero)
+    # Endpoint = 52.44.7.145:51820  <-- IP publico do server AWS
+fi
+
+
 datafim="$(date)"
 echo
 echo "Iniciou as : $dataini"
@@ -350,6 +442,9 @@ echo "| 80 e 443 TCP (SERVIDOR WEB) |"
 if [ $instalarftp = "S" ] || [ $instalarftp = "s" ];then
 echo "| 21 TCP           (FTP)      |"
 echo "| 10000-10100 TCP  (FTP)      |"
+fi
+if [ $instalarwireguard = "S" ] || [ $instalarwireguard = "s" ];then
+echo "| 51820 TCP  (VPN Wireguard)  |"
 fi
 echo "|                             |"
 #echo "| Se foi instalado o firebird |"
