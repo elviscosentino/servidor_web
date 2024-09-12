@@ -97,6 +97,9 @@ echo
 read -p "Instalar o NodeJS? (S/N) " instalarnode < /dev/tty
 echo
 
+read -p "Instalar servidor FTP? (S/N) " instalarftp < /dev/tty
+echo
+
 
 # alterar o timezone do servidor para o Brasil
 echo "${bold}${green}===== ALTERANDO O TIMEZONE DO SERVIDOR PARA O BRASIL =====${normal}"
@@ -105,6 +108,11 @@ dataini="$(date)"
 echo
 echo "Inicio: $dataini"
 
+
+# ajusta o ssh para se manter conectado e nao cair com timeout
+sudo sed -i 's/#ClientAliveInterval 0/ClientAliveInterval 60/g' /etc/ssh/sshd_config
+sudo sed -i 's/#ClientAliveCountMax 3/ClientAliveCountMax 3/g' /etc/ssh/sshd_config
+sudo systemctl restart ssh
 
 
 # instala o servidor apache, php 8.3 e suas dependencias
@@ -296,6 +304,32 @@ if [ $instalarphpmyadmin = "S" ] || [ $instalarphpmyadmin = "s" ];then
     sudo systemctl restart apache2
 
     #sudo mariadb -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'Iddqd1@Iddqd1#';FLUSH PRIVILEGES;"
+fi
+
+
+# instala o servidor FTP
+if [ $instalarftp = "S" ] || [ $instalarftp = "s" ];then
+    sudo apt install vsftpd
+    # ajustes no arquivo de configuracao
+    sudo sed -i 's/listen=NO/listen=YES/g' /etc/vsftpd.conf
+    sudo sed -i 's/listen_ipv6=YES/listen_ipv6=NO/g' /etc/vsftpd.conf
+    sudo sed -i 's/#local_enable=YES/local_enable=YES/g' /etc/vsftpd.conf
+    sudo sed -i 's/#write_enable=YES/write_enable=YES/g' /etc/vsftpd.conf
+    sudo sed -i 's/#chroot_local_user=YES/chroot_local_user=YES/g' /etc/vsftpd.conf
+    sudo sed -i 's/#local_umask=022/local_umask=022/g' /etc/vsftpd.conf
+    echo "
+pasv_enable=YES
+pasv_min_port=10000
+pasv_max_port=10100" | sudo tee -a /etc/vsftpd.conf
+    # permitir conexao de usuarios sem permissoes de shell
+    echo "/usr/sbin/nologin" | sudo tee -a /etc/shells
+    # criar pasta para criar arquivos de usuarios com apontamento da pasta raiz
+    sudo mkdir /etc/vsftpd_user_conf
+    # liberacao de portas no firewall
+    sudo ufw allow ftp
+    sudo ufw allow 10000:10100/tcp
+    # reiniciar o servico
+    sudo systemctl restart vsftpd
 fi
 
 
