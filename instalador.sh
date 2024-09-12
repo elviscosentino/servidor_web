@@ -81,7 +81,7 @@ echo
 
 read -p "Instalar o MariaDB? (S/N) " instalarmariadb < /dev/tty
 if [ $instalarmariadb = "S" ] || [ $instalarmariadb = "s" ];then
-    read -sp "Digite a senha do banco de dados: " bancosenha < /dev/tty
+    read -sp "Digite a senha do usuario root do MariaDB: " bancosenha < /dev/tty
 fi
 echo
 
@@ -117,6 +117,7 @@ sudo systemctl restart ssh
 
 # instala o servidor apache, php 8.3 e suas dependencias
 echo "${bold}${green}===== INSTALANDO O APACHE, PHP 8.3 E DEPENDÊNCIAS =====${normal}"
+sudo sed -i 's/IPV6=yes/IPV6=no/g' /etc/default/ufw
 sudo ufw allow ssh && sudo ufw allow http && sudo ufw allow https && echo "y" | sudo ufw enable
 sudo add-apt-repository ppa:ondrej/php -y
 sudo apt update
@@ -303,7 +304,9 @@ if [ $instalarphpmyadmin = "S" ] || [ $instalarphpmyadmin = "s" ];then
     cd /etc/apache2/sites-enabled && sudo ln -s /etc/apache2/sites-available/$dominiophpmyadmin.conf
     sudo systemctl restart apache2
 
-    #sudo mariadb -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'Iddqd1@Iddqd1#';FLUSH PRIVILEGES;"
+fi
+if [ $instalarmariadb = "S" ] || [ $instalarmariadb = "s" ];then
+    sudo mariadb -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$bancosenha';FLUSH PRIVILEGES;"
 fi
 
 
@@ -337,6 +340,22 @@ datafim="$(date)"
 echo
 echo "Iniciou as : $dataini"
 echo "Terminou as: $datafim"
+echo
+echo "${bold}${yellow}"
+echo "=========== ATENCAO ==========="
+echo "|                             |"
+echo "| LIBERE AS PORTAS NA AWS:    |"
+echo "|                             |"
+echo "| 80 e 443 TCP (SERVIDOR WEB) |"
+if [ $instalarftp = "S" ] || [ $instalarftp = "s" ];then
+echo "| 21 TCP           (FTP)      |"
+echo "| 10000-10100 TCP  (FTP)      |"
+fi
+echo "|                             |"
+#echo "| Se foi instalado o firebird |"
+#echo "| Descomente o pdo_firebird   |"
+#echo "| no php.ini                  |"
+echo "==============================="
 echo
 echo "${bold}${green}====== FIM DA INSTALACAO =====${normal}"
 echo
