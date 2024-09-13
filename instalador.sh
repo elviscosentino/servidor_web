@@ -20,7 +20,7 @@ clear
 echo
 echo "${bold}${blue}================================================================================${normal}"
 echo
-echo "${bold}Bem vindo ao super instalador de servidor Apache + PHP 8.3 + MariaDB 11.2 + PHPMyadmin + Composer 2.6.6 + Node.js 20.x"
+echo "${bold}Bem vindo ao super instalador de servidor Apache + PHP 8.3 + MariaDB 11.2 + PHPMyadmin + Composer 2.7.9 + Node.js 20.x"
 echo "Criado por Elvis Cosentino"
 echo
 echo "${bold}${blue}================================================================================${normal}"
@@ -205,12 +205,13 @@ sudo systemctl restart apache2
 
 
 
-# instala o composer 2.6.6 -- https://getcomposer.org/
+# instala o composer -- https://getcomposer.org/
 if [ $instalarcomposer = "S" ] || [ $instalarcomposer = "s" ];then
-    echo "${bold}${green}===== INSTALANDO O COMPOSER 2.6.6 =====${normal}"
+    echo "${bold}${green}===== INSTALANDO O COMPOSER 2.7.9 =====${normal}"
+    sudo apt install zip unzip -y
     cd ~
     php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-    sudo php composer-setup.php --version=2.6.6 --install-dir=/usr/local/bin --filename=composer
+    sudo php composer-setup.php --version=2.7.9 --install-dir=/usr/local/bin --filename=composer
     sudo rm /home/$USER/composer-setup.php
 fi
 
