@@ -20,7 +20,7 @@ clear
 echo
 echo "${bold}${blue}================================================================================${normal}"
 echo
-echo "${bold}Bem vindo ao super instalador de servidor Apache + PHP 8.3 + MariaDB 11.2 + PHPMyadmin + Composer 2.7.9 + Node.js 20.x"
+echo "${bold}Bem vindo ao super instalador de servidor Apache + PHP 8.3 + MariaDB 11.4.3 + PHPMyadmin + Composer 2.7.9 + Node.js 20.x"
 echo "Criado por Elvis Cosentino"
 echo
 echo "${bold}${blue}================================================================================${normal}"
@@ -122,8 +122,7 @@ sudo systemctl restart ssh
 echo "${bold}${green}===== INSTALANDO O APACHE, PHP 8.3 E DEPENDÊNCIAS =====${normal}"
 sudo sed -i 's/IPV6=yes/IPV6=no/g' /etc/default/ufw
 sudo ufw allow ssh && sudo ufw allow http && sudo ufw allow https && echo "y" | sudo ufw enable
-sudo add-apt-repository ppa:ondrej/php -y
-sudo apt update
+sudo add-apt-repository ppa:ondrej/php -y && sudo apt update
 sudo apt install lsb-release ca-certificates apt-transport-https software-properties-common -y
 sudo apt install php8.3 php8.3-cli php8.3-mysql php8.3-mbstring php8.3-xml php8.3-gd php8.3-curl php8.3-zip php8.3-imagick php8.3-bcmath -y
 sudo usermod -aG www-data $USER
@@ -131,29 +130,30 @@ sudo usermod -aG www-data $USER
 
 
 # instala e configura o certificado https
-if [ $instalarcomposer = "S" ] || [ $instalarcomposer = "s" ];then
+if [ $instalarssl = "S" ] || [ $instalarssl = "s" ];then
     echo "${bold}${green}===== INSTALANDO CERTIFICADO SSL PARA ACESSO HTTPS =====${normal}"
     sudo apt install certbot python3-certbot-apache -y
-    #sudo certbot certonly --apache --agree-tos -n -d $dominio -m $email
-    sudo certbot certonly --manual --preferred-challenges=dns --agree-tos -d $dominio -d *.$dominio -m $email
+    sudo certbot certonly --apache --agree-tos -n -d $dominio -m $email
+    #sudo certbot certonly --manual --preferred-challenges=dns --agree-tos -d $dominio -d *.$dominio -m $email
 echo "
 # Comando para emissão de certificado
-sudo certbot certonly --manual --preferred-challenges=dns --non-interactive --agree-tos -d $dominio -d *.$dominio -m $email
+#sudo certbot certonly --manual --preferred-challenges=dns --non-interactive --agree-tos -d $dominio -d *.$dominio -m $email
 
 # Reinicie o Apache ou o serviço web correspondente
-sudo systemctl restart apache2" | sudo tee ~/renovar_certificado.sh
-    sudo chmod 777 ~/renovar_certificado.sh
-    echo "0  0    1 * *   root    /home/ubuntu/renovar_certificado.sh" | sudo tee -a /etc/crontab
+#sudo systemctl restart apache2" | sudo tee ~/renovar_certificado.sh
+#    sudo chmod 777 ~/renovar_certificado.sh
+#    echo "0  0    1 * *   root    /home/ubuntu/renovar_certificado.sh" | sudo tee -a /etc/crontab
 fi
 
 
 
 # configura pasta base e dados para conexao do site
-echo "${bold}${green}===== CONFIGURANDO A PASTA BASE E PARÂMETROS DO APACHE =====${normal}"
-sudo mkdir /var/www/$pasta && sudo chown root:www-data /var/www/$pasta -R && sudo chmod 777 /var/www/$pasta -R
-echo "<VirtualHost *:80>
+if [ $instalarssl = "S" ] || [ $instalarssl = "s" ];then
+    echo "${bold}${green}===== CONFIGURANDO A PASTA BASE E PARÂMETROS DO APACHE =====${normal}"
+    sudo mkdir /var/www/$pasta && sudo chown root:www-data /var/www/$pasta -R && sudo chmod 777 /var/www/$pasta -R && sudo chmod g+s /var/www/$pasta -R
+    echo "<VirtualHost *:80>
         ServerName $dominio
-        ServerAlias *.$dominio
+        #ServerAlias *.$dominio
 
         ServerAdmin webmaster@localhost
         DocumentRoot /var/www/$pasta/public
@@ -162,15 +162,16 @@ echo "<VirtualHost *:80>
         CustomLog \${APACHE_LOG_DIR}/access.log combined
 
         RewriteEngine on
-        RewriteCond %{SERVER_NAME} =$dominio [OR]
-        RewriteCond %{SERVER_NAME} =www.$dominio
+        RewriteCond %{SERVER_NAME} =$dominio
+        #RewriteCond %{SERVER_NAME} =$dominio [OR]
+        #RewriteCond %{SERVER_NAME} =www.$dominio
         RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
 </VirtualHost>
 
 <IfModule mod_ssl.c>
         <VirtualHost *:443>
                 ServerName $dominio
-                ServerAlias www.$dominio *.$dominio
+                #ServerAlias www.$dominio *.$dominio
                 ServerAdmin webmaster@localhost
 
                 DocumentRoot /var/www/$pasta/public
@@ -196,13 +197,13 @@ echo "<VirtualHost *:80>
                 Include /etc/letsencrypt/options-ssl-apache.conf
         </VirtualHost>
 </IfModule>" | sudo tee /etc/apache2/sites-available/$dominio.conf
-cd /etc/apache2/sites-enabled && sudo ln -s /etc/apache2/sites-available/$dominio.conf && sudo unlink /etc/apache2/sites-enabled/000-default.conf
-sudo a2enmod ssl && sudo a2enmod rewrite
-sudo sed -i 's/memory_limit = 128M/memory_limit = 1024M/g' /etc/php/8.3/apache2/php.ini
-sudo sed -i 's/post_max_size = 8M/post_max_size = 100M/g' /etc/php/8.3/apache2/php.ini
-sudo sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 100M/g' /etc/php/8.3/apache2/php.ini
-sudo systemctl restart apache2
-
+    cd /etc/apache2/sites-enabled && sudo ln -s /etc/apache2/sites-available/$dominio.conf && sudo unlink /etc/apache2/sites-enabled/000-default.conf
+    sudo a2enmod ssl && sudo a2enmod rewrite
+    sudo sed -i 's/memory_limit = 128M/memory_limit = 1024M/g' /etc/php/8.3/apache2/php.ini
+    sudo sed -i 's/post_max_size = 8M/post_max_size = 100M/g' /etc/php/8.3/apache2/php.ini
+    sudo sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 100M/g' /etc/php/8.3/apache2/php.ini
+    sudo systemctl restart apache2
+fi
 
 
 # instala o composer -- https://getcomposer.org/
@@ -227,22 +228,22 @@ if [ $instalarnode = "S" ] || [ $instalarnode = "s" ];then
 fi
 
 
-# instala o mariadb 11.2
+# instala o mariadb 11.4
 if [ $instalarmariadb = "S" ] || [ $instalarmariadb = "s" ];then
     echo "${bold}${green}===== INSTALANDO O SERVIDOR DE BANCO DE DADOS MARIADB 11.2 =====${normal}"
     sudo apt-get install apt-transport-https curl
     sudo mkdir -p /etc/apt/keyrings
     sudo curl -o /etc/apt/keyrings/mariadb-keyring.pgp 'https://mariadb.org/mariadb_release_signing_key.pgp'
-    echo "# MariaDB 11.2 repository list - created 2024-01-25 14:39 UTC
-    # https://mariadb.org/download/
-    X-Repolib-Name: MariaDB
-    Types: deb
-    # deb.mariadb.org is a dynamic mirror if your preferred mirror goes offline. See https://mariadb.org/mirrorbits/ for details.
-    # URIs: https://deb.mariadb.org/11.2/ubuntu
-    URIs: https://mirrors.xtom.com/mariadb/repo/11.2/ubuntu
-    Suites: jammy
-    Components: main main/debug
-    Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp" | sudo tee /etc/apt/sources.list.d/mariadb.sources
+    echo "# MariaDB 11.4 repository list - created 2024-09-16 13:41 UTC
+# https://mariadb.org/download/
+X-Repolib-Name: MariaDB
+Types: deb
+# deb.mariadb.org is a dynamic mirror if your preferred mirror goes offline. See https://mariadb.org/mirrorbits/ for details.
+# URIs: https://deb.mariadb.org/11.4/ubuntu
+URIs: https://mirrors.xtom.com/mariadb/repo/11.4/ubuntu
+Suites: noble
+Components: main main/debug
+Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp" | sudo tee /etc/apt/sources.list.d/mariadb.sources
     sudo apt update
     sudo apt install mariadb-server -y
 
