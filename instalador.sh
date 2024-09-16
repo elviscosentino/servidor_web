@@ -454,5 +454,14 @@ echo "|                             |"
 #echo "| no php.ini                  |"
 echo "==============================="
 echo
+echo
+if [ $instalarftp = "S" ] || [ $instalarftp = "s" ];then
+echo "${bold}Para cadastrar usuarios no FTP:"
+echo "sudo useradd -s /usr/sbin/nologin ${yellow}usuario${normal}"
+echo "sudo passwd ${yellow}usuario${normal}"
+echo "sudo usermod -aG www-data ${yellow}usuario${normal}"
+echo "echo "local_root=/var/www/$pasta" | sudo tee /etc/vsftpd_user_conf/${yellow}usuario${normal}"
+echo "sudo systemctl restart vsftpd"
+fi
 echo "${bold}${green}====== FIM DA INSTALACAO =====${normal}"
 echo
