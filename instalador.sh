@@ -150,7 +150,7 @@ fi
 # configura pasta base e dados para conexao do site
 if [ $instalarssl = "S" ] || [ $instalarssl = "s" ];then
     echo "${bold}${green}===== CONFIGURANDO A PASTA BASE E PARÂMETROS DO APACHE =====${normal}"
-    sudo mkdir /var/www/$pasta && sudo chown root:www-data /var/www/$pasta -R && sudo chmod 777 /var/www/$pasta -R && sudo chmod g+s /var/www/$pasta -R
+    sudo mkdir /var/www/$pasta && sudo mkdir /var/www/$pasta/public && sudo chown root:www-data /var/www/$pasta -R && sudo chmod 775 /var/www/$pasta -R && sudo chmod g+s /var/www/$pasta -R
     echo "<VirtualHost *:80>
         ServerName $dominio
         #ServerAlias *.$dominio
