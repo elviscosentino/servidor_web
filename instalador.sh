@@ -331,6 +331,7 @@ pasv_min_port=10000
 pasv_max_port=10100" | sudo tee -a /etc/vsftpd.conf
     # permitir conexao de usuarios sem permissoes de shell
     echo "/usr/sbin/nologin" | sudo tee -a /etc/shells
+    echo "CREATE_HOME yes" | sudo tee -a /etc/login.defs
     # criar pasta para criar arquivos de usuarios com apontamento da pasta raiz
     sudo mkdir /etc/vsftpd_user_conf
     # liberacao de portas no firewall
