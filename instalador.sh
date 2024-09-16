@@ -326,9 +326,11 @@ if [ $instalarftp = "S" ] || [ $instalarftp = "s" ];then
     sudo sed -i 's/#chroot_local_user=YES/chroot_local_user=YES/g' /etc/vsftpd.conf
     sudo sed -i 's/#local_umask=022/local_umask=022/g' /etc/vsftpd.conf
     echo "
+allow_writeable_chroot=YES
 pasv_enable=YES
 pasv_min_port=10000
-pasv_max_port=10100" | sudo tee -a /etc/vsftpd.conf
+pasv_max_port=10100
+user_config_dir=/etc/vsftpd_user_conf" | sudo tee -a /etc/vsftpd.conf
     # permitir conexao de usuarios sem permissoes de shell
     echo "/usr/sbin/nologin" | sudo tee -a /etc/shells
     echo "CREATE_HOME yes" | sudo tee -a /etc/login.defs
