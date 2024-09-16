@@ -456,7 +456,7 @@ echo "==============================="
 echo
 echo
 if [ $instalarftp = "S" ] || [ $instalarftp = "s" ];then
-echo "${bold}Para cadastrar usuarios no FTP:"
+echo "${bold}Para cadastrar usuarios no FTP:${normal}"
 echo "sudo useradd -s /usr/sbin/nologin ${yellow}usuario${normal}"
 echo "sudo passwd ${yellow}usuario${normal}"
 echo "sudo usermod -aG www-data ${yellow}usuario${normal}"
