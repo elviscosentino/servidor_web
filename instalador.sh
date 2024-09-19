@@ -126,6 +126,11 @@ sudo add-apt-repository ppa:ondrej/php -y && sudo apt update
 sudo apt install lsb-release ca-certificates apt-transport-https software-properties-common -y
 sudo apt install php8.3 php8.3-cli php8.3-mysql php8.3-mbstring php8.3-xml php8.3-gd php8.3-curl php8.3-zip php8.3-imagick php8.3-bcmath -y
 sudo usermod -aG www-data $USER
+sudo sed -i 's/memory_limit = 128M/memory_limit = 1024M/g' /etc/php/8.3/apache2/php.ini
+sudo sed -i 's/post_max_size = 8M/post_max_size = 100M/g' /etc/php/8.3/apache2/php.ini
+sudo sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 100M/g' /etc/php/8.3/apache2/php.ini
+sudo sed -i 's/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 7200/g' /etc/php/8.3/apache2/php.ini
+sudo systemctl restart apache2
 
 
 
@@ -135,7 +140,7 @@ if [ $instalarssl = "S" ] || [ $instalarssl = "s" ];then
     sudo apt install certbot python3-certbot-apache -y
     sudo certbot certonly --apache --agree-tos -n -d $dominio -m $email
     #sudo certbot certonly --manual --preferred-challenges=dns --agree-tos -d $dominio -d *.$dominio -m $email
-echo "
+    echo "
 # Comando para emissão de certificado
 #sudo certbot certonly --manual --preferred-challenges=dns --non-interactive --agree-tos -d $dominio -d *.$dominio -m $email
 
@@ -143,12 +148,8 @@ echo "
 #sudo systemctl restart apache2" | sudo tee ~/renovar_certificado.sh
 #    sudo chmod 777 ~/renovar_certificado.sh
 #    echo "0  0    1 * *   root    /home/ubuntu/renovar_certificado.sh" | sudo tee -a /etc/crontab
-fi
 
-
-
-# configura pasta base e dados para conexao do site
-if [ $instalarssl = "S" ] || [ $instalarssl = "s" ];then
+    # configura pasta base e dados para conexao do site
     echo "${bold}${green}===== CONFIGURANDO A PASTA BASE E PARÂMETROS DO APACHE =====${normal}"
     sudo mkdir /var/www/$pasta && sudo mkdir /var/www/$pasta/public && sudo chown root:www-data /var/www/$pasta -R && sudo chmod 775 /var/www/$pasta -R && sudo chmod g+s /var/www/$pasta -R
     echo "<VirtualHost *:80>
@@ -199,9 +200,6 @@ if [ $instalarssl = "S" ] || [ $instalarssl = "s" ];then
 </IfModule>" | sudo tee /etc/apache2/sites-available/$dominio.conf
     cd /etc/apache2/sites-enabled && sudo ln -s /etc/apache2/sites-available/$dominio.conf && sudo unlink /etc/apache2/sites-enabled/000-default.conf
     sudo a2enmod ssl && sudo a2enmod rewrite
-    sudo sed -i 's/memory_limit = 128M/memory_limit = 1024M/g' /etc/php/8.3/apache2/php.ini
-    sudo sed -i 's/post_max_size = 8M/post_max_size = 100M/g' /etc/php/8.3/apache2/php.ini
-    sudo sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 100M/g' /etc/php/8.3/apache2/php.ini
     sudo systemctl restart apache2
 fi
 
@@ -215,6 +213,7 @@ if [ $instalarcomposer = "S" ] || [ $instalarcomposer = "s" ];then
     sudo php composer-setup.php --version=2.7.9 --install-dir=/usr/local/bin --filename=composer
     sudo rm /home/$USER/composer-setup.php
 fi
+
 
 # instala o node.js 20.x -- https://deb.nodesource.com/
 if [ $instalarnode = "S" ] || [ $instalarnode = "s" ];then
