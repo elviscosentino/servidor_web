@@ -201,6 +201,16 @@ if [ $instalarssl = "S" ] || [ $instalarssl = "s" ];then
     cd /etc/apache2/sites-enabled && sudo ln -s /etc/apache2/sites-available/$dominio.conf && sudo unlink /etc/apache2/sites-enabled/000-default.conf
     sudo a2enmod ssl && sudo a2enmod rewrite
     sudo systemctl restart apache2
+else
+    echo "<VirtualHost *:80>
+        ServerName $dominio
+
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/$pasta/public
+
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>" | sudo tee /etc/apache2/sites-available/$dominio.conf
 fi
 
 
