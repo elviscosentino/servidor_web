@@ -126,12 +126,17 @@ sudo add-apt-repository ppa:ondrej/php -y && sudo apt update
 sudo apt install lsb-release ca-certificates apt-transport-https software-properties-common -y
 sudo apt install php8.3 php8.3-cli php8.3-mysql php8.3-mbstring php8.3-xml php8.3-gd php8.3-curl php8.3-zip php8.3-imagick php8.3-bcmath -y
 sudo usermod -aG www-data $USER
+
+
+# configura pasta base e parametros do php
+echo "${bold}${green}===== CONFIGURANDO A PASTA BASE E PARÂMETROS DO APACHE =====${normal}"
+sudo mkdir /var/www/$pasta && sudo mkdir /var/www/$pasta/public && sudo cp /var/www/html/index.html /var/www/$pasta/public
+sudo chown root:www-data /var/www/$pasta -R && sudo chmod 775 /var/www/$pasta -R && sudo chmod g+s /var/www/$pasta -R
 sudo sed -i 's/memory_limit = 128M/memory_limit = 1024M/g' /etc/php/8.3/apache2/php.ini
 sudo sed -i 's/post_max_size = 8M/post_max_size = 100M/g' /etc/php/8.3/apache2/php.ini
 sudo sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 100M/g' /etc/php/8.3/apache2/php.ini
 sudo sed -i 's/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 7200/g' /etc/php/8.3/apache2/php.ini
 sudo systemctl restart apache2
-
 
 
 # instala e configura o certificado https
@@ -149,9 +154,6 @@ if [ $instalarssl = "S" ] || [ $instalarssl = "s" ];then
 #    sudo chmod 777 ~/renovar_certificado.sh
 #    echo "0  0    1 * *   root    /home/ubuntu/renovar_certificado.sh" | sudo tee -a /etc/crontab
 
-    # configura pasta base e dados para conexao do site
-    echo "${bold}${green}===== CONFIGURANDO A PASTA BASE E PARÂMETROS DO APACHE =====${normal}"
-    sudo mkdir /var/www/$pasta && sudo mkdir /var/www/$pasta/public && sudo chown root:www-data /var/www/$pasta -R && sudo chmod 775 /var/www/$pasta -R && sudo chmod g+s /var/www/$pasta -R
     echo "<VirtualHost *:80>
         ServerName $dominio
         #ServerAlias *.$dominio
